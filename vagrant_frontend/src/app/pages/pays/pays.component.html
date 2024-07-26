@@ -1,0 +1,151 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card flex justify-content-between align-items-center">
+        <div class="p-2 h-full w-full flex flex-column justify-content-between">
+          <div class="flex align-items-center justify-content-between mb-3">
+            <div class="p-col-6">
+              <h5>Pays</h5>
+            </div>
+            <div class="flex align-items-center gap-2 ">
+              <button pButton pRipple label="Ajouter" icon="pi pi-plus-circle" (click)="onDisplayDialog(editForm)"></button>
+              <button pButton pRipple label="Suppression" icon="pi pi-trash"
+                      [disabled]="paysSelected.length<1"
+                      class="p-button-danger" (click)="supprimer()"></button>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <p-table #dt  styleClass="p-datatable-responsive-demo p-datatable-sm p-datatable"
+                 [value]="payss"
+                 [rows]="5" dataKey="id"
+                 [(selection)]="paysSelected"
+                 sortMode="multiple"
+                 [globalFilterFields]="['nomPays']"
+                 [paginator]="true"
+                 [loading]="loading"
+                 scrollHeight="600px"
+                 dataKey="id"
+                 [filterDelay]="0">
+          <ng-template pTemplate="caption">
+            <div class="flex justify-content-between flex-column sm:flex-row">
+                    <span class="p-input-icon-left mb-2">
+							<i class="pi pi-search"></i>
+							<input pInputText type="text" #filter (input)="onGlobalFilter(dt, $event)"
+                     placeholder="Recherche" class="w-full"/>
+						</span>
+            </div>
+          </ng-template>
+
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 3em">
+                <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+              </th>
+              <th style="font-weight: bold;">Pays</th>
+              <th style="font-weight: bold;">Actions</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-pays let-columns="columns">
+            <tr [pSelectableRow]="pays">
+              <td>
+                <p-tableCheckbox [value]="pays"></p-tableCheckbox>
+              </td>
+
+              <td class="table-separator">{{pays.nomPays}}</td>
+
+              <td>
+                <button pButton pRipple type="button"  (click)="onDisplayDialogue(pays)"
+                        icon="pi pi-pencil" class="p-button-secondary"></button>
+                <button pButton pRipple type="button"  icon="pi pi-trash"
+                        (click)="deleteElement(pays)"
+                        class="p-button-danger"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage" let-columns>
+            <tr> <td colspan="3" style="text-align: center; font-size: 1.2em; color: red; font-weight: bold;"> <span class="text-danger"> Aucun pays trouvé ! </span> </td> </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+
+
+  <p-dialog header="Ajouter pays" [(visible)]="display" [style]="{width: '40em', minWidth: '150px'}" [minY]="70" [maximizable]="true" [baseZIndex]="10000" [modal]="true" [responsive]="true">
+    <form (ngSubmit)="save(editForm)" name="editForm" role="form" novalidate  #editForm="ngForm">
+      <div>
+        <div class="flex flex-column gap-2">
+          <label for="nom" class="required-input bold-label">Libellé<span class="required-icon"></span></label>
+          <input type="text" id="nom" pInputText name="nom"
+                 [(ngModel)]="pays.nomPays" [style]="{'width': '100%'}" required/>
+        </div><br>
+      </div>
+      <p-footer>
+        <div class="p-col-12">
+          <div class="p-d-flex p-jc-end float-right">
+            <div class="flex align-items-center gap-2 ">
+              <button type="button" pButton icon="fa fa-close" class="p-button-danger"
+                      label="Quitter" (click)="annuler()"></button>
+              <button type="submit" pButton icon="fa fa-save" label="Enregistrer"
+                      class="p-button-success" [disabled]="editForm.invalid || isSaving">
+              </button>
+            </div>
+          </div>
+        </div>
+      </p-footer>
+    </form>
+  </p-dialog>
+  <p-dialog header="Supprimer pays" [(visible)]="displayDelete" [modal]="true" [responsive]="true" (onHide)="annuler()"
+            [style]="{width: '50em', minWidth: '200px'}" [minY]="70" [maximizable]="true" [baseZIndex]="10000">
+
+    <p-table [value]="paysSelected" dataKey="id">
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+
+          <th>Libellé</th><span class="required-icon"></span>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-pays let-columns="columns">
+        <tr>
+
+          <td>{{pays.nomPays}}</td>
+
+        </tr>
+      </ng-template>
+
+    </p-table>
+    <p-footer>
+      <div class="ui-dialog-buttonpane ui-helper-clearfix">
+
+        <button type="button" pButton icon="fa fa-close" class="p-button-danger"
+                label="Fermer" (click)='annulerDelete()'>
+        </button>
+        <button type="button" pButton icon="fa fa-times"  class="p-button-success" label="Confirmer"
+                (click)="deleteAll()">
+        </button>
+
+      </div>
+    </p-footer>
+  </p-dialog>
+  <p-dialog></p-dialog>
+
+  <p-toast position="top-right"></p-toast>
+
+  <p-confirmDialog #cd header="Confirmation" icon="pi pi-exclamation-triangle">
+    <p-footer>
+      <button type="button" class="p-button-secondary" pButton icon="pi pi-times"
+              label="NON" (click)="cd.reject()"></button>
+      <button type="button" class="p-button-danger" pButton icon="pi pi-check"
+              label="OUI" (click)="cd.accept()"></button>
+    </p-footer>
+  </p-confirmDialog>
+</div>
+
+

@@ -1,0 +1,371 @@
+<p-tabView>
+  <p-tabPanel header="Emprunteur">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card flex justify-content-between align-items-center">
+            <div class="p-2 h-full w-full flex flex-column justify-content-between">
+              <div class="flex align-items-center justify-content-between mb-3">
+                <div class="p-col-6">
+                </div>
+                <div class="flex align-items-center gap-2 ">
+                  <button pButton pRipple label="Ajouter" icon="pi pi-plus-circle" (click)="onDisplayDialog(editForm)"></button>
+                  <button pButton pRipple label="Suppression" icon="pi pi-trash"
+                          [disabled]="authorSelected.length<1"
+                          class="p-button-danger" (click)="supprimer()"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <p-table #dt  styleClass="p-datatable-responsive-demo p-datatable-sm p-datatable"
+
+                     [value]="authors"
+                     [rows]="5" dataKey="id"
+                     [(selection)]="authorSelected"
+                     sortMode="multiple"
+                     [globalFilterFields]="['nom','cnib','prenom']"
+                     [paginator]="true"
+                     [loading]="loading"
+                     scrollHeight="600px"
+                     dataKey="id"
+                     [filterDelay]="0">
+              <ng-template pTemplate="caption">
+                <div class="flex justify-content-between flex-column sm:flex-row">
+                    <span class="p-input-icon-left mb-2">
+							<i class="pi pi-search"></i>
+							<input pInputText type="text" #filter (input)="onGlobalFilter(dt, $event)"
+                     placeholder="Recherche" class="w-full"/>
+						</span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 3em">
+                    <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                  </th>
+
+                  <th style="font-weight: bold;">CNIB</th>
+                  <th style="font-weight: bold;">Nom</th>
+                  <th style="font-weight: bold;">Prénom</th>
+                  <th style="font-weight: bold;">Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-author let-columns="columns">
+                <tr [pSelectableRow]="author">
+                  <td>
+                    <p-tableCheckbox [value]="author"></p-tableCheckbox>
+                  </td>
+
+                  <td class="table-separator">{{author.cnib}}</td>
+                  <td class="table-separator">{{author.nom}}</td>
+                  <td class="table-separator">{{author.prenom}}</td>
+
+                  <td>
+                    <button pButton pRipple type="button"  (click)="onDisplayDialogue(author)"
+                            icon="pi pi-pencil" class="p-button-secondary"></button>
+                    <button pButton pRipple type="button"  icon="pi pi-trash"
+                            (click)="deleteElement(author)"
+                            class="p-button-danger"></button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage" let-columns>
+                <tr> <td colspan="3" style="text-align: center; font-size: 1.2em; color: red; font-weight: bold;"> <span class="text-danger"> Aucun emprunteur trouvé ! </span> </td> </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+      </div>
+      <p-dialog header="Ajouter un emprunteur" [(visible)]="display" [style]="{width: '40em', minWidth: '150px'}" [minY]="70" [maximizable]="true" [baseZIndex]="10000" [modal]="true" [responsive]="true">
+        <form (ngSubmit)="save(editForm)" name="editForm" role="form" novalidate  #editForm="ngForm">
+          <div>
+            <div class="flex flex-column gap-2">
+              <label for="nom" class="required-input bold-label">CNIB<span class="required-icon"></span></label>
+              <input type="text" id="cnib" pInputText name="cnib"
+                     [(ngModel)]="author.cnib" [style]="{'width': '100%'}" required/>
+            </div><br>
+            <div class="flex flex-column gap-2">
+              <label for="nom" class="required-input bold-label">Nom<span class="required-icon"></span></label>
+              <input type="text" id="nom" pInputText name="nom"
+                     [(ngModel)]="author.nom" [style]="{'width': '100%'}" required/>
+            </div><br>
+            <div class="flex flex-column gap-2">
+              <label for="nom" class="required-input bold-label">Prénom<span class="required-icon"></span></label>
+              <input type="text" id="prenom" pInputText name="prenom"
+                     [(ngModel)]="author.prenom" [style]="{'width': '100%'}" required/>
+            </div><br>
+          </div>
+
+          <p-footer>
+            <div class="p-col-12">
+              <div class="p-d-flex p-jc-end float-right">
+                <div class="flex align-items-center gap-2 ">
+                  <button type="button" pButton icon="fa fa-close" class="p-button-danger"
+                          label="Quitter" (click)="annuler()"></button>
+                  <button type="submit" pButton icon="fa fa-save" label="Enregistrer"
+                          class="p-button-success" [disabled]="editForm.invalid || isSaving">
+                  </button>
+                </div>
+              </div>
+            </div>
+          </p-footer>
+        </form>
+      </p-dialog>
+      <p-dialog header="Supprimer emprunteur" [(visible)]="displayDelete" [modal]="true" [responsive]="true" (onHide)="annuler()"
+                [style]="{width: '50em', minWidth: '200px'}" [minY]="70" [maximizable]="true" [baseZIndex]="10000">
+
+        <p-table [value]="authorSelected" dataKey="id">
+          <ng-template pTemplate="header" let-columns>
+            <tr>
+
+              <th>CNIB</th><span class="required-icon"></span>
+              <th>Nom</th><span class="required-icon"></span>
+              <th>Prénom</th><span class="required-icon"></span>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-author let-columns="columns">
+            <tr>
+
+              <td>{{author.cnib}}</td>
+              <td>{{author.nom}}</td>
+              <td>{{author.prenom}}</td>
+
+            </tr>
+          </ng-template>
+
+        </p-table>
+        <p-footer>
+          <div class="ui-dialog-buttonpane ui-helper-clearfix">
+
+            <button type="button" pButton icon="fa fa-close" class="p-button-danger"
+                    label="Fermer" (click)='annulerDelete()'>
+            </button>
+            <button type="button" pButton icon="fa fa-times"  class="p-button-success" label="Confirmer"
+                    (click)="deleteAll()">
+            </button>
+
+          </div>
+        </p-footer>
+      </p-dialog>
+      <p-dialog></p-dialog>
+    </div>
+  </p-tabPanel>
+  <p-tabPanel header="Emprunt">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card flex justify-content-between align-items-center">
+            <div class="p-2 h-full w-full flex flex-column justify-content-between">
+              <div class="flex align-items-center justify-content-between mb-3">
+                <div class="p-col-6">
+                </div>
+                <div class="flex align-items-center gap-2 ">
+                  <button pButton pRipple label="Ajouter" icon="pi pi-plus-circle" (click)="onDisplayDialogEmprunt(editForm1)"></button>
+                  <button pButton pRipple label="Suppression" icon="pi pi-trash"
+                          [disabled]="empruntSelected.length<1"
+                          class="p-button-danger" (click)="supprimerEmprunt()"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <p-table #dt  styleClass="p-datatable-responsive-demo p-datatable-sm p-datatable"
+
+                     [value]="emprunts"
+                     [rows]="5" dataKey="id"
+                     [(selection)]="empruntSelected"
+                     sortMode="multiple"
+                     [globalFilterFields]="['date','client.cnib']"
+                     [paginator]="true"
+                     [loading]="loading"
+                     scrollHeight="600px"
+                     dataKey="id"
+                     [filterDelay]="0">
+              <ng-template pTemplate="caption">
+                <div class="flex justify-content-between flex-column sm:flex-row">
+                    <span class="p-input-icon-left mb-2">
+							<i class="pi pi-search"></i>
+							<input pInputText type="text" #filter (input)="onGlobalFilter(dt, $event)"
+                     placeholder="Recherche" class="w-full"/>
+						</span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 3em">
+                    <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                  </th>
+
+                  <th style="font-weight: bold;">Date</th>
+                  <th style="font-weight: bold;">Emprunteur</th>
+                  <th style="font-weight: bold;">Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-emprunt let-columns="columns">
+                <tr [pSelectableRow]="emprunt">
+                  <td>
+                    <p-tableCheckbox [value]="emprunt"></p-tableCheckbox>
+                  </td>
+
+                  <td class="table-separator">{{emprunt.date}}</td>
+                  <td class="table-separator">{{emprunt.client?.cnib}} {{emprunt.client?.nom}}</td>
+                  <td class="table-separator">{{emprunt.titre}}</td>
+
+                  <td>
+                    <button pButton pRipple type="button"  (click)="onDisplayDialogueEmprunt(emprunt)"
+                            icon="pi pi-pencil" class="p-button-secondary"></button>
+                    <button pButton pRipple type="button"  icon="pi pi-eye"
+                            (click)="viewList(emprunt)"
+                            class="p-button-success"></button>
+                    <button pButton pRipple type="button"  icon="pi pi-trash"
+                            (click)="deleteElementEmprunt(emprunt)"
+                            class="p-button-danger"></button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage" let-columns>
+                <tr> <td colspan="3" style="text-align: center; font-size: 1.2em; color: red; font-weight: bold;"> <span class="text-danger"> Aucun emprunt effectué ! </span> </td> </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+      </div>
+      <p-dialog header="Ajouter un emprunt" [(visible)]="displayEmprunt" [style]="{width: '40em', minWidth: '150px'}" [minY]="70" [maximizable]="true" [baseZIndex]="10000" [modal]="true" [responsive]="true">
+        <form (ngSubmit)="saveEmprunt(editForm1)" name="editForm1" role="form" novalidate  #editForm1="ngForm">
+          <div>
+            <div class="flex flex-column gap-2">
+              <label for="nom" class="required-input bold-label">Date<span class="required-icon"></span></label>
+              <input type="date" id="date" pInputText name="date"
+                     [(ngModel)]="emprunt.date" [style]="{'width': '100%'}" required/>
+            </div><br>
+            <div class="flex flex-column gap-2">
+              <label for="nom" class="required-input bold-label">Emprunteur<span class="required-icon"></span></label>
+              <p-dropdown [options]="authors" [(ngModel)]="emprunt.client"
+                          optionLabel="cnib"  name="client" [filter]="true"
+                          appendTo ="body" placeholder="Séléctionner l'emprunteur"
+                          [style]="{'width': '100%'}"
+                          [resetFilterOnHide]='true' [showClear]="true" >
+              </p-dropdown>
+            </div><br>
+            <div class="flex flex-column gap-2">
+              <label for="nom" class="required-input bold-label">Livres<span class="required-icon"></span></label>
+              <p-multiSelect
+                [options]="livres" appendTo="body"
+                [(ngModel)]="selectLivres"
+                [style]="{'width': '100%'}"
+                optionLabel="titre"
+                [showClear]="true"
+                name="selectLivres"
+                placeholder="Selectionner livre">
+              </p-multiSelect>
+            </div><br>
+          </div>
+          <p-footer>
+            <div class="p-col-12">
+              <div class="p-d-flex p-jc-end float-right">
+                <div class="flex align-items-center gap-2 ">
+                  <button type="button" pButton icon="fa fa-close" class="p-button-danger"
+                          label="Quitter" (click)="annulerEmprunt()"></button>
+                  <button type="submit" pButton icon="fa fa-save" label="Enregistrer"
+                          class="p-button-success" [disabled]="editForm1.invalid || isSaving">
+                  </button>
+                </div>
+              </div>
+            </div>
+          </p-footer>
+        </form>
+      </p-dialog>
+      <p-dialog header="Supprimer emprunt" [(visible)]="displayDeleteEmprunt" [modal]="true" [responsive]="true" (onHide)="annuler()"
+                [style]="{width: '50em', minWidth: '200px'}" [minY]="70" [maximizable]="true" [baseZIndex]="10000">
+
+        <p-table [value]="empruntSelected" dataKey="id">
+          <ng-template pTemplate="header" let-columns>
+            <tr>
+
+              <th>Date</th><span class="required-icon"></span>
+              <th>Client</th><span class="required-icon"></span>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-author let-columns="columns">
+            <tr>
+
+              <td>{{emprunt.date}}</td>
+              <td>{{emprunt.client?.nom}}</td>
+
+            </tr>
+          </ng-template>
+
+        </p-table>
+        <p-footer>
+          <div class="ui-dialog-buttonpane ui-helper-clearfix">
+
+            <button type="button" pButton icon="fa fa-close" class="p-button-danger"
+                    label="Fermer" (click)='annulerDeleteEmprunt()'>
+            </button>
+            <button type="button" pButton icon="fa fa-times"  class="p-button-success" label="Confirmer"
+                    (click)="deleteAllEmprunt()">
+            </button>
+
+          </div>
+        </p-footer>
+      </p-dialog>
+      <p-dialog></p-dialog>
+      <p-dialog header="Liste des livres emprunté par {{nom}}  {{prenom}}" [(visible)]="detail" [modal]="true" [responsive]="true" (onHide)="annuler()"
+                [style]="{width: '50em', minWidth: '200px'}" [minY]="70" [maximizable]="true" [baseZIndex]="10000">
+
+        <p-table [value]="listLivre" dataKey="id">
+          <ng-template pTemplate="header" let-columns>
+            <tr>
+
+              <th>Titre</th><span class="required-icon"></span>
+              <th>EAN</th><span class="required-icon"></span>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-livre let-columns="columns">
+            <tr>
+
+              <td>{{livre.titre}}</td>
+              <td>{{livre.ean}}</td>
+
+            </tr>
+          </ng-template>
+
+        </p-table>
+        <p-footer>
+          <div class="ui-dialog-buttonpane ui-helper-clearfix">
+            <button type="button" pButton icon="fa fa-times"  class="p-button-success" label="Quitter"
+                    (click)="quitter()">
+            </button>
+
+          </div>
+        </p-footer>
+      </p-dialog>
+    </div>
+  </p-tabPanel>
+</p-tabView>
+<p-toast position="top-right"></p-toast>
+
+<p-confirmDialog #cd header="Confirmation" icon="pi pi-exclamation-triangle">
+  <p-footer>
+    <button type="button" class="p-button-secondary" pButton icon="pi pi-times"
+            label="NON" (click)="cd.reject()"></button>
+    <button type="button" class="p-button-danger" pButton icon="pi pi-check"
+            label="OUI" (click)="cd.accept()"></button>
+  </p-footer>
+</p-confirmDialog>
+
+
+
